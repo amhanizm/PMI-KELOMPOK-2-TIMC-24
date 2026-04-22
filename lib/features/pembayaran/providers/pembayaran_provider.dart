@@ -1,69 +1,46 @@
 import 'package:flutter/material.dart';
-import '../models/payment_model.dart';
+import 'package:sigercep_admin/core/services/supabase_service.dart';
+import '../../transaksi/models/transaksi_model.dart';
+import '../../transaksi/models/detail_transaksi_model.dart';
 
-class PembayaranProvider with ChangeNotifier {
-  List<PaymentModel> _pembayaranMasuk = [];
-  List<PaymentModel> _riwayatTransaksi = [];
+class PembayaranProvider extends ChangeNotifier {
+  List<TransaksiModel> pembayaranPending = [];
+  bool isLoading = false;
 
-  List<PaymentModel> get pembayaranMasuk => _pembayaranMasuk;
-  List<PaymentModel> get riwayatTransaksi => _riwayatTransaksi;
+  Future<void> fetchPembayaran() async {
+    isLoading = true;
+    notifyListeners();
 
-  PembayaranProvider() {
-    _loadDummyData();
-  }
+    final data = await SupabaseService.getWhere(
+      'transaksi',
+      'status_bayar',
+      'pending',
+    );
 
-  void _loadDummyData() {
-    // Data Pembayaran Masuk (Menunggu)
-    _pembayaranMasuk = [
-      PaymentModel(
-        id: '1',
-        meja: '03',
-        pesanan: 'Aren Latte',
-        addons: 'Pure matcha',
-        harga: 27000,
-        status: 'Menunggu',
-      ),
-    ];
+    pembayaranPending = data.map((e) => TransaksiModel.fromJson(e)).toList();
 
-    // Data Riwayat Transaksi (Lunas)
-    _riwayatTransaksi = [
-      PaymentModel(
-        id: '2',
-        meja: '03',
-        pesanan: 'Aren Latte',
-        addons: 'Pure matcha',
-        harga: 27000,
-        status: 'Lunas',
-      ),
-      PaymentModel(
-        id: '3',
-        meja: '03',
-        pesanan: 'Aren Latte',
-        addons: '-',
-        harga: 20000,
-        status: 'Lunas',
-      ),
-      PaymentModel(
-        id: '4',
-        meja: '03',
-        pesanan: 'Aren Latte',
-        addons: '-',
-        harga: 20000,
-        status: 'Lunas',
-      ),
-    ];
+    isLoading = false;
     notifyListeners();
   }
 
-  // Warna badge sesuai status
-  Color getStatusColor(String status) {
-    switch (status) {
-      case 'Menunggu':
-        return const Color(0xFFA7A7A7);
-      case 'Lunas':
-        return const Color(0xFF84B074);
-      default:
-        return Colors.grey;
-    }
+  Future<List<DetailTransaksiModel>> getDetail(int idTransaksi) async {
+    final data = await SupabaseService.getWhere(
+      'detail_transaksi',
+      'id_transaksi',
+      idTransaksi,
+    );
+
+    return data.map((e) => DetailTransaksiModel.fromJson(e)).toList();
+  }
+
+  Future<void> konfirmasiPembayaran(int idTransaksi) async {
+    await SupabaseService.update(
+      'transaksi',
+      'id_transaksi',
+      idTransaksi,
+      {'status_bayar': 'done'},
+    );
+
+    await fetchPembayaran();
   }
 }

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/menu_provider.dart';
-import '../models/menu_item_model.dart';
+import '../models/menu_model.dart';
 
 class MenuCard extends StatelessWidget {
-  final MenuItemModel menu;
+  final MenuModel menu;
 
   const MenuCard({super.key, required this.menu});
 
@@ -28,27 +28,32 @@ class MenuCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            menu.icon,
+          // Ikon default karena Supabase tidak punya field icon
+          const Icon(
+            Icons.fastfood,
             size: 35,
-            color: menu.iconColor,
+            color: AppColors.primaryBlue,
           ),
+
           const SizedBox(width: 15),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  menu.name,
+                  menu.namaMenu,
                   style: const TextStyle(
                     color: AppColors.primaryBlue,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 4),
+
                 Text(
-                  menu.description,
+                  "Kategori: ${menu.kategori}",
                   style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 11,
@@ -57,9 +62,12 @@ class MenuCard extends StatelessWidget {
               ],
             ),
           ),
+
           Switch(
-            value: menu.isActive,
-            onChanged: (_) => provider.toggleMenuActive(menu.id),
+            value: menu.statusAktif == 'y',
+            onChanged: (value) {
+              provider.updateStatus(menu.idMenu, value ? 'y' : 'n');
+            },
             activeColor: AppColors.primaryBlue,
           ),
         ],

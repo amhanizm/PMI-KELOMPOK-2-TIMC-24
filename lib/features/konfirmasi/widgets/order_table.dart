@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_styles.dart';
 import '../providers/konfirmasi_provider.dart';
 import 'status_button.dart';
+import '../../transaksi/models/transaksi_model.dart';
 
 class OrderTable extends StatelessWidget {
   const OrderTable({super.key});
@@ -11,7 +12,7 @@ class OrderTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<KonfirmasiProvider>(context);
-    final orders = provider.orders;
+    final orders = provider.pesananMasuk; // TransaksiModel list
 
     return Container(
       decoration: BoxDecoration(
@@ -55,10 +56,9 @@ class OrderTable extends StatelessWidget {
       ),
       children: [
         _buildHeaderCell('Meja'),
-        _buildHeaderCell('Pesanan'),
-        _buildHeaderCell('Add-ons'),
-        _buildHeaderCell('Harga'),
-        _buildHeaderCell('Status Pesanan', center: true),
+        _buildHeaderCell('Total'),
+        _buildHeaderCell('Status'),
+        _buildHeaderCell('Aksi', center: true),
       ],
     );
   }
@@ -77,7 +77,7 @@ class OrderTable extends StatelessWidget {
     );
   }
 
-  TableRow _buildRow(BuildContext context, order) {
+  TableRow _buildRow(BuildContext context, TransaksiModel order) {
     return TableRow(
       decoration: const BoxDecoration(
         border: Border(
@@ -85,10 +85,9 @@ class OrderTable extends StatelessWidget {
         ),
       ),
       children: [
-        _buildDataCell(order.meja, bold: true),
-        _buildDataCell(order.pesanan, color: AppColors.primaryBlue),
-        _buildDataCell(order.addons, color: AppColors.primaryBlue),
-        _buildDataCell(order.formattedHarga, color: AppColors.primaryBlue),
+        _buildDataCell("Meja ${order.idMeja}", bold: true),
+        _buildDataCell("Rp ${order.totalBayar}"),
+        _buildDataCell(order.statusPesanan, color: AppColors.primaryBlue),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
           child: Center(

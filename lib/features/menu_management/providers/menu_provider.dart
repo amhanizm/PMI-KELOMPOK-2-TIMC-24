@@ -1,88 +1,48 @@
 import 'package:flutter/material.dart';
-import '../models/menu_item_model.dart';
+import 'package:sigercep_admin/core/services/supabase_service.dart';
+import '../models/menu_model.dart';
 
-class MenuProvider with ChangeNotifier {
-  List<MenuItemModel> _allMenu = [];
-  List<MenuItemModel> _filteredMenu = [];
-  String _searchQuery = '';
+class MenuProvider extends ChangeNotifier {
+  List<MenuModel> menus = [];          // Data asli dari Supabase
+  List<MenuModel> filteredMenu = [];   // Data hasil pencarian
+  bool isLoading = false;
 
-  List<MenuItemModel> get filteredMenu => _filteredMenu;
+  // Ambil data dari Supabase
+  Future<void> fetchMenus() async {
+    isLoading = true;
+    notifyListeners();
 
-  MenuProvider() {
-    _loadDummyData();
-  }
+    final data = await SupabaseService.getData('menu');
 
-  void _loadDummyData() {
-    _allMenu = [
-      MenuItemModel(
-        id: '1',
-        name: 'Aren Latte',
-        description: 'Campuran espresso, susu segar, dan sirup gula aren.',
-        icon: Icons.coffee,
-      ),
-      MenuItemModel(
-        id: '2',
-        name: 'Chicken katsu Signature',
-        description: 'BBQ/BLACKPEPPER',
-        icon: Icons.lunch_dining,
-      ),
-      MenuItemModel(
-        id: '3',
-        name: 'Nasi Goreng Chicken Katsu',
-        description: 'Nasi goreng disajikan dengan Ayam Katsu yang renyah',
-        icon: Icons.restaurant,
-      ),
-      MenuItemModel(
-        id: '4',
-        name: 'Mix Platter',
-        description: 'Campuran nugget, Onion rings, dan Kentang goreng yang renyah',
-        icon: Icons.fastfood,
-      ),
-      MenuItemModel(
-        id: '5',
-        name: 'French Fries',
-        description: 'Kentang Goreng berbumbu yang disajikan renyah dan panas.',
-        icon: Icons.restaurant_menu,
-        iconColor: const Color(0xFFFCE76C),
-      ),
-      MenuItemModel(
-        id: '6',
-        name: 'Creamy Latte',
-        description: '..........',
-        icon: Icons.coffee,
-      ),
-      MenuItemModel(
-        id: '7',
-        name: 'Spanish Latte',
-        description: 'Campuran espresso, susu segar, dan sirup gula aren.',
-        icon: Icons.local_cafe,
-      ),
-    ];
-    _applyFilter();
-  }
+    menus = data.map((e) => MenuModel.fromJson(e)).toList();
+    filteredMenu = menus; // awalnya tampilkan semua menu
 
-  void toggleMenuActive(String id) {
-    final index = _allMenu.indexWhere((item) => item.id == id);
-    if (index != -1) {
-      _allMenu[index].isActive = !_allMenu[index].isActive;
-      _applyFilter();
-      notifyListeners();
-    }
-  }
-
-  void searchMenu(String query) {
-    _searchQuery = query.toLowerCase();
-    _applyFilter();
+    isLoading = false;
     notifyListeners();
   }
 
-  void _applyFilter() {
-    if (_searchQuery.isEmpty) {
-      _filteredMenu = List.from(_allMenu);
+  // Fungsi pencarian
+  void searchMenu(String query) {
+    if (query.isEmpty) {
+      filteredMenu = menus;
     } else {
-      _filteredMenu = _allMenu.where((item) {
-        return item.name.toLowerCase().contains(_searchQuery);
-      }).toList();
+      filteredMenu = menus
+          .where((menu) =>
+              menu.namaMenu.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     }
+    notifyListeners();
+  }
+
+  // Update status menu (aktif / nonaktif)
+  Future<void> updateStatus(int idMenu, String status) async {
+    await SupabaseService.update(
+      'menu',
+      'id_menu',
+      idMenu,
+      {'status_aktif': status},
+    );
+
+    await fetchMenus(); // refresh data
   }
 }
