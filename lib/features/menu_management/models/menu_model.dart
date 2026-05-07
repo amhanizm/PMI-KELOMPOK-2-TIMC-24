@@ -4,7 +4,8 @@ class MenuModel {
   final String kategori;
   final num hargaDasar;
   final int stok;
-  final String statusAktif;
+  final bool statusAktif;   // ← BOOLEAN, bukan String
+  final String? subKategori;
 
   MenuModel({
     required this.idMenu,
@@ -13,16 +14,18 @@ class MenuModel {
     required this.hargaDasar,
     required this.stok,
     required this.statusAktif,
+    this.subKategori,
   });
 
   factory MenuModel.fromJson(Map<String, dynamic> json) {
     return MenuModel(
-      idMenu: json['id_menu'],
-      namaMenu: json['nama_menu'],
-      kategori: json['kategori'],
-      hargaDasar: json['harga_dasar'],
-      stok: json['stok'],
-      statusAktif: json['status_aktif'],
+      idMenu: json['id_menu'] ?? 0,
+      namaMenu: json['nama_menu'] ?? '',
+      kategori: json['kategori'] ?? '',
+      hargaDasar: json['harga_dasar'] ?? 0,
+      stok: json['stok'] ?? 0,
+      statusAktif: json['status_aktif'] == true,   // ← FIX
+      subKategori: json['sub_kategori'],
     );
   }
 
@@ -34,6 +37,7 @@ class MenuModel {
       'harga_dasar': hargaDasar,
       'stok': stok,
       'status_aktif': statusAktif,
+      'sub_kategori': subKategori,
     };
   }
 }

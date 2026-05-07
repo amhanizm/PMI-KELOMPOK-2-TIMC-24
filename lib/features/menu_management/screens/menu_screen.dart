@@ -22,8 +22,23 @@ class MenuScreen extends StatelessWidget {
   }
 }
 
-class MenuContent extends StatelessWidget {
+class MenuContent extends StatefulWidget {
   const MenuContent({super.key});
+
+  @override
+  State<MenuContent> createState() => _MenuContentState();
+}
+
+class _MenuContentState extends State<MenuContent> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Panggil Supabase untuk ambil data menu
+    Future.microtask(() {
+      Provider.of<MenuProvider>(context, listen: false).fetchMenus();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +55,7 @@ class MenuContent extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Header dengan Search
+                // Header + Search
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                   decoration: const BoxDecoration(
@@ -65,17 +80,26 @@ class MenuContent extends StatelessWidget {
                     ],
                   ),
                 ),
+
                 // Grid Menu
                 Padding(
                   padding: const EdgeInsets.all(30),
                   child: Consumer<MenuProvider>(
                     builder: (context, provider, _) {
+                      if (provider.isLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
                       final menus = provider.filteredMenu;
+
                       if (menus.isEmpty) {
                         return const Center(
                           child: Text('Tidak ada menu ditemukan'),
                         );
                       }
+
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),

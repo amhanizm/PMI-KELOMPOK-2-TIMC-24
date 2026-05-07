@@ -1,57 +1,56 @@
 import 'package:flutter/material.dart';
-import '../models/order_model.dart';
+import 'package:sigercep_admin/core/services/supabase_service.dart';
+import '../../transaksi/models/transaksi_model.dart';
+import '../../transaksi/models/detail_transaksi_model.dart';
 
-class KonfirmasiProvider with ChangeNotifier {
-  List<OrderModel> _orders = [];
+class KonfirmasiProvider extends ChangeNotifier {
+  List<TransaksiModel> pesananMasuk = [];
+  bool isLoading = false;
 
-  List<OrderModel> get orders => _orders;
+  Future<void> fetchPesanan() async {
+    isLoading = true;
+    notifyListeners();
 
-  KonfirmasiProvider() {
-    _loadDummyData();
-  }
+    final data = await SupabaseService.getWhere(
+      'transaksi',
+      'status_pesanan',
+      'pending',
+    );
 
-  void _loadDummyData() {
-    _orders = [
-      OrderModel(
-        id: '1',
-        meja: '3',
-        pesanan: 'Aren Latte',
-        addons: 'Pure matcha',
-        harga: 27000,
-        status: 'Diterima',
-      ),
-      // Bisa tambah data lain jika perlu
-    ];
+    pesananMasuk = data.map((e) => TransaksiModel.fromJson(e)).toList();
+
+    isLoading = false;
     notifyListeners();
   }
 
-  void nextStatus(OrderModel order) {
-    final index = _orders.indexWhere((o) => o.id == order.id);
-    if (index == -1) return;
+  Future<List<DetailTransaksiModel>> getDetail(int idTransaksi) async {
+    final data = await SupabaseService.getWhere(
+      'detail_transaksi',
+      'id_transaksi',
+      idTransaksi,
+    );
 
-    switch (order.status) {
-      case 'Diterima':
-        _orders[index].status = 'Dibuat';
-        break;
-      case 'Dibuat':
-        _orders[index].status = 'Disajikan';
-        break;
-      case 'Disajikan':
-        // Opsional: looping kembali ke Diterima, atau biarkan tetap
-        // _orders[index].status = 'Diterima';
-        break;
-    }
-    notifyListeners();
+    return data.map((e) => DetailTransaksiModel.fromJson(e)).toList();
   }
 
-  // Untuk mendapatkan warna badge sesuai status
+  Future<void> updateStatus(int idTransaksi, String status) async {
+    await SupabaseService.update(
+      'transaksi',
+      'id_transaksi',
+      idTransaksi,
+      {'status_pesanan': status},
+    );
+
+    await fetchPesanan();
+  }
+
   Color getStatusColor(String status) {
     switch (status) {
-      case 'Diterima':
+      case 'pending':
         return const Color(0xFFA7A7A7);
-      case 'Dibuat':
+      case 'proses':
         return const Color(0xFFBFA66D);
-      case 'Disajikan':
+      case 'done':
         return const Color(0xFF84B074);
       default:
         return Colors.grey;
